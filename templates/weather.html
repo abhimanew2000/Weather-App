@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-top: 50px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        form input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+            width: 70%;
+        }
+        form button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-left: none;
+            border-radius: 0 5px 5px 0;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            outline: none;
+        }
+        form button:hover {
+            background-color: #0056b3;
+        }
+        .weather-info {
+            text-align: center;
+        }
+        .weather-info h2 {
+            color: #007BFF;
+        }
+        .main-content {
+            display: flex;
+            margin-top: 20px;
+        }
+        .hourly-forecast {
+            flex: 1;
+            margin-right: 20px;
+        }
+        .hourly-forecast h3 {
+            text-align: center;
+            color: #007BFF;
+        }
+        .hourly-forecast ul {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            list-style-type: none;
+        }
+        .hourly-forecast li {
+            background: #f0f0f0;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .hourly-forecast li img {
+            width: 50px;
+            height: 50px;
+        }
+        .hourly-forecast li span {
+            display: block;
+            margin-top: 5px;
+            color: #333;
+        }
+        .hourly-forecast li .temp {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #map {
+            flex: 2;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        <form action="/weather" method="post">
+            <input type="text" id="city" name="city" placeholder="Enter city name" required>
+            <button type="submit">Get Weather</button>
+        </form>
+
+        {% if weather %}
+            <div class="weather-info">
+                <h2>Weather in {{ weather.city }}</h2>
+                <div class="weather-details">
+                    <p>Temperature: {{ weather.temperature }} &deg;C</p>
+                    <p>Description: {{ weather.description }}</p>
+                    <img src="http://openweathermap.org/img/wn/{{ weather.icon }}@2x.png" alt="Weather icon">
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="hourly-forecast">
+                    <h3>Hourly Forecast</h3>
+                    <ul>
+                        {% for hour in weather.hourly %}
+                            <li>
+                                <span>{{ hour.dt_txt.split(' ')[1] }}</span>
+                                <img src="http://openweathermap.org/img/wn/{{ hour.weather[0].icon }}@2x.png" alt="Weather icon">
+                                <span class="temp">{{ hour.main.temp }} &deg;C</span>
+                                <span>{{ hour.weather[0].description }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div id="map"></div>
+            </div>
+
+            <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+            <script>
+                var map = L.map('map').setView([{{ weather.coord.lat }}, {{ weather.coord.lon }}], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+                L.marker([{{ weather.coord.lat }}, {{ weather.coord.lon }}]).addTo(map)
+                    .bindPopup('{{ weather.city }}')
+                    .openPopup();
+            </script>
+        {% endif %}
+    </div>
+</body>
+</html>
